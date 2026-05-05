@@ -34,7 +34,7 @@ ALLOWED_ORIGINS = ["*"] if _raw_origins.strip() == "*" else [o.strip() for o in 
 client = _fallback_client
 
 app = FastAPI(title="Coding Assistant API", version="3.0.0")
-app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_credentials=False, allow_methods=["*"], allow_headers=["*"])
 
 SUPPORTED_EXTENSIONS = {
     ".py": "Python", ".js": "JavaScript", ".ts": "TypeScript",
