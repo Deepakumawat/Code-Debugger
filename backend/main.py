@@ -1,3 +1,4 @@
+﻿from ai_client import client as _fallback_client
 import os
 import re
 import json
@@ -22,8 +23,6 @@ from nlp_engine import nlp_engine
 from ml_models import ItemResponseTheory, BayesianKnowledgeTracing, DifficultyAdaptor, LearningPathRecommender
 from adaptive_integration import AdaptiveIntegration
 
-OPENAI_API_KEY   = os.getenv("OPENAI_API_KEY")
-OPENAI_MODEL     = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 HOST             = os.getenv("HOST", "0.0.0.0")
 PORT             = int(os.getenv("PORT", "8000"))
 MAX_UPLOAD_MB    = int(os.getenv("MAX_UPLOAD_MB", "10"))
@@ -32,7 +31,7 @@ MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 _raw_origins = os.getenv("ALLOWED_ORIGINS", "*")
 ALLOWED_ORIGINS = ["*"] if _raw_origins.strip() == "*" else [o.strip() for o in _raw_origins.split(",")]
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = _fallback_client
 
 app = FastAPI(title="Coding Assistant API", version="3.0.0")
 app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
@@ -287,7 +286,7 @@ async def debug_code(request: DebugRequest):
                 {"role": "system", "content": "You are a helpful coding assistant for students. Always respond with valid JSON only. Never use markdown or code fences. Never include control characters in JSON strings."},
                 {"role": "user", "content": prompt},
             ],
-            model=OPENAI_MODEL, temperature=0.1, max_tokens=4096,
+            model=GROQ_MODEL, temperature=0.1, max_tokens=4096,
         )
         parsed = parse_response(completion.choices[0].message.content)
         raw_code = parsed.get("debugged_code", clean_code)
@@ -324,7 +323,7 @@ async def chat(request: ChatRequest):
 
         completion = client.chat.completions.create(
             messages=messages,
-            model=OPENAI_MODEL,
+            model=GROQ_MODEL,
             temperature=0.5,
             max_tokens=1024,
         )
@@ -365,7 +364,7 @@ Rules:
                 {"role": "system", "content": "You are a CS knowledge base. Always respond with valid JSON only. No markdown. No code fences. Use \\n for newlines inside strings."},
                 {"role": "user", "content": prompt},
             ],
-            model=OPENAI_MODEL,
+            model=GROQ_MODEL,
             temperature=0.3,
             max_tokens=1024,
         )
@@ -467,7 +466,7 @@ async def increment_usage(request: UsageIncrementRequest):
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "Coding Assistant API", "model": OPENAI_MODEL}
+    return {"status": "ok", "service": "Coding Assistant API", "model": GROQ_MODEL}
 
 # ═════════════════════════════════════════════════════════════════════════════
 # NLP ANALYSIS ENDPOINTS
@@ -714,7 +713,7 @@ async def explain_simple(request: ExplainRequest):
     try:
         completion = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model=OPENAI_MODEL, temperature=0.7, max_tokens=512,
+            model=GROQ_MODEL, temperature=0.7, max_tokens=512,
         )
         return {"explanation": completion.choices[0].message.content.strip()}
     except Exception as e:
