@@ -663,7 +663,8 @@ class RunRequest(BaseModel):
 async def run_code(request: RunRequest):
     if not request.code.strip():
         raise HTTPException(status_code=400, detail="Code cannot be empty")
-    if request.language not in ("Python", "auto-detect"):
+    # The language comes from the AI's detection, whose casing varies ("python"/"Python").
+    if (request.language or "").strip().lower() not in ("python", "auto-detect"):
         return {"output": "", "error": f"Live execution is only supported for Python on this server.\nFor {request.language}, download the fixed code and run it locally.", "language": request.language}
     import subprocess, tempfile, sys
     code = sanitize_code(request.code)
